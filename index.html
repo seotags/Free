@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube High tags</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      text-align: center;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin: auto;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      margin-top: 5px;
+    }
+    .tag {
+      background: #fff000;
+      color: #333;
+      padding: 5px 10px;
+      margin-bottom: 5px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      /* Force each tag to take about half the width */
+      flex: 0 0 48%;
+      box-sizing: border-box;
+      text-align: left;
+    }
+    .tag span {
+      margin-left: 3px;
+      cursor: pointer;
+      color: red;
+      font-weight: bold;
+    }
+    #copyBtn {
+      margin-top: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px;
+      width: 100%;
+      border-radius: 5px;
+      cursor: pointer;
+      display: none;
+    }
+    #wordCount {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>YouTube SEO tag Free </h2>
+    <input
+      type="text"
+      id="searchQuery"
+      placeholder="Type your keyword"
+      onkeyup="fetchSuggestions()"
+    />
+    <div class="tags" id="tagsContainer"></div>
+    <button id="copyBtn" onclick="copyTags()">Copy keyword</button>
+    <div id="wordCount"></div>
+  </div>
+
+  <script>
+    // --- STEP 1: Fetch live suggestions using JSONP ---
+    function fetchSuggestions() {
+      const query = document.getElementById("searchQuery").value.trim();
+      const tagsContainer = document.getElementById("tagsContainer");
+      const copyBtn = document.getElementById("copyBtn");
+      const wordCountDiv = document.getElementById("wordCount");
+
+      // Clear previous suggestions if query is empty.
+      if (!query) {
+        tagsContainer.innerHTML = "";
+        copyBtn.style.display = "none";
+        wordCountDiv.textContent = "";
+        return;
+      }
+
+      // Remove any existing JSONP script tag.
+      const oldScript = document.getElementById("jsonpScript");
+      if (oldScript) {
+        oldScript.remove();
+      }
+
+      // Create a new script tag for JSONP.
+      const script = document.createElement("script");
+      script.id = "jsonpScript";
+      script.src =
+        "https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=" +
+        encodeURIComponent(query) +
+        "&callback=handleSuggestions";
+      document.body.appendChild(script);
+    }
+
+    // --- STEP 2: Process the JSONP callback ---
+    function handleSuggestions(data) {
+      // Expected format: [original query, [suggestion1, suggestion2, ...], ...]
+      const suggestions = data[1] || [];
+      let processedTags = [];
+      suggestions.forEach(suggestion => {
+        // Process each suggestion into tags of 2-3 words.
+        const tagsFromSuggestion = processSuggestion(suggestion);
+        processedTags = processedTags.concat(tagsFromSuggestion);
+      });
+      displayTags(processedTags);
+    }
+
+    // Split a suggestion string into an array of tags each with 2-3 words.
+    function processSuggestion(suggestion) {
+      // Split by whitespace and filter out any empty strings.
+      const words = suggestion.split(/\s+/).filter(w => w.length > 0);
+      let chunks = [];
+      // We only want suggestions that have at least 2 words.
+      if (words.length < 2) return [];
+      
+      let i = 0;
+      while (i < words.length) {
+        // Default to take 3 words.
+        let chunkSize = 3;
+        // If remaining words are fewer than 3:
+        if (i + chunkSize > words.length) {
+          chunkSize = words.length - i;
+          // If the last chunk would be a single word, merge it with the previous chunk if possible.
+          if (chunkSize === 1 && chunks.length > 0) {
+            chunks[chunks.length - 1] += " " + words[i];
+            break;
+          }
+        }
+        // Ensure each chunk has at least 2 words.
+        if (chunkSize === 1 && i === 0) {
+          // If the suggestion starts with a single word, force two.
+          chunkSize = 2;
+        }
+        const chunk = words.slice(i, i + chunkSize).join(" ");
+        // Only add chunks that have at least 2 words.
+        if (chunk.split(/\s+/).length >= 2) {
+          chunks.push(chunk);
+        }
+        i += chunkSize;
+      }
+      return chunks;
+    }
+
+    // --- STEP 3: Display the processed tags ---
+    function displayTags(tags) {
+      const tagsContainer = document.getElementById("tagsContainer");
+      const copyBtn = document.getElementById("copyBtn");
+      tagsContainer.innerHTML = "";
+
+      if (tags.length === 0) {
+        tagsContainer.innerHTML = "<p>No suggestions found.</p>";
+        copyBtn.style.display = "none";
+        document.getElementById("wordCount").textContent = "";
+        return;
+      }
+
+      // Limit to 30 tags.
+      tags.slice(0, 30).forEach(tag => {
+        const tagElement = document.createElement("div");
+        tagElement.classList.add("tag");
+
+        // Create a text node for the tag text.
+        const textNode = document.createTextNode(tag);
+        // Create a span for the removal button using the proper Unicode multiplication sign.
+        const removeSpan = document.createElement("span");
+        removeSpan.textContent = "\u00D7"; // displays as ×
+        removeSpan.onclick = function() {
+          removeTag(removeSpan);
+          updateWordCount();  // Update word count when a tag is removed.
+        };
+
+        tagElement.appendChild(textNode);
+        tagElement.appendChild(removeSpan);
+        tagsContainer.appendChild(tagElement);
+      });
+
+      copyBtn.style.display = "block";
+      updateWordCount();
+    }
+
+    // --- STEP 4: Remove a tag from the UI ---
+    function removeTag(element) {
+      element.parentElement.remove();
+    }
+
+    // --- STEP 5: Copy only the tag texts as a comma-separated list ---
+    function copyTags() {
+      const tagElements = document.querySelectorAll(".tag");
+      const tagsArray = Array.from(tagElements).map(tag => {
+        // The firstChild is the text node with the tag text.
+        return tag.firstChild.nodeValue.trim();
+      });
+
+      if (tagsArray.length === 0) {
+        alert("No tags to copy!");
+        return;
+      }
+
+      navigator.clipboard.writeText(tagsArray.join(", "))
+        .then(() => {
+          alert("Tags copied successfully!");
+        })
+        .catch(err => console.error("Error copying:", err));
+    }
+
+    // --- STEP 6: Update the word count display accurately ---
+    function updateWordCount() {
+      const tagElements = document.querySelectorAll(".tag");
+      let totalWords = 0;
+      Array.from(tagElements).forEach(tag => {
+        // Use the first child (the text node) to count words.
+        const text = tag.firstChild.nodeValue.trim();
+        if (text.length > 0) {
+          // Split on whitespace.
+          const words = text.split(/\s+/);
+          totalWords += words.length;
+        }
+      });
+      document.getElementById("wordCount").textContent = "Word Count: " + totalWords;
+    }
+  </script>
+</body>
+</html>
