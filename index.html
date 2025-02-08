@@ -1,246 +1,862 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>YouTube High tags</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      text-align: center;
-      padding: 20px;
-    }
-    .container {
-      max-width: 500px;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      margin: auto;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    .tags {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      margin-top: 5px;
-    }
-    .tag {
-      background: #fff000;
-      color: #333;
-      padding: 5px 10px;
-      margin-bottom: 5px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      /* Force each tag to take about half the width */
-      flex: 0 0 48%;
-      box-sizing: border-box;
-      text-align: left;
-    }
-    .tag span {
-      margin-left: 3px;
-      cursor: pointer;
-      color: red;
-      font-weight: bold;
-    }
-    #copyBtn {
-      margin-top: 10px;
-      background: #007bff;
-      color: white;
-      border: none;
-      padding: 10px;
-      width: 100%;
-      border-radius: 5px;
-      cursor: pointer;
-      display: none;
-    }
-    #wordCount {
-      margin-top: 10px;
-      font-weight: bold;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h2>YouTube SEO tag Free </h2>
-    <input
-      type="text"
-      id="searchQuery"
-      placeholder="Type your keyword"
-      onkeyup="fetchSuggestions()"
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SEO Tags – Keyword & Portfolio Tool</title>
+    <meta
+      name="description"
+      content="A professional SEO tool for generating YouTube tags, showcasing portfolios, and answering FAQs—all with advanced keyword management and theme customization features."
     />
-    <div class="tags" id="tagsContainer"></div>
-    <button id="copyBtn" onclick="copyTags()">Copy keyword</button>
-    <div id="wordCount"></div>
-  </div>
-
-  <script>
-    // --- STEP 1: Fetch live suggestions using JSONP ---
-    function fetchSuggestions() {
-      const query = document.getElementById("searchQuery").value.trim();
-      const tagsContainer = document.getElementById("tagsContainer");
-      const copyBtn = document.getElementById("copyBtn");
-      const wordCountDiv = document.getElementById("wordCount");
-
-      // Clear previous suggestions if query is empty.
-      if (!query) {
-        tagsContainer.innerHTML = "";
-        copyBtn.style.display = "none";
-        wordCountDiv.textContent = "";
-        return;
+    <meta
+      name="keywords"
+      content="SEO, YouTube Tags, Keyword Generator, Portfolio, FAQ, Theme Changer"
+    />
+    <style>
+      /* --- Global Styles --- */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
       }
-
-      // Remove any existing JSONP script tag.
-      const oldScript = document.getElementById("jsonpScript");
-      if (oldScript) {
-        oldScript.remove();
+      html {
+        scroll-behavior: smooth;
       }
-
-      // Create a new script tag for JSONP.
-      const script = document.createElement("script");
-      script.id = "jsonpScript";
-      script.src =
-        "https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=" +
-        encodeURIComponent(query) +
-        "&callback=handleSuggestions";
-      document.body.appendChild(script);
-    }
-
-    // --- STEP 2: Process the JSONP callback ---
-    function handleSuggestions(data) {
-      // Expected format: [original query, [suggestion1, suggestion2, ...], ...]
-      const suggestions = data[1] || [];
-      let processedTags = [];
-      suggestions.forEach(suggestion => {
-        // Process each suggestion into tags of 2-3 words.
-        const tagsFromSuggestion = processSuggestion(suggestion);
-        processedTags = processedTags.concat(tagsFromSuggestion);
-      });
-      displayTags(processedTags);
-    }
-
-    // Split a suggestion string into an array of tags each with 2-3 words.
-    function processSuggestion(suggestion) {
-      // Split by whitespace and filter out any empty strings.
-      const words = suggestion.split(/\s+/).filter(w => w.length > 0);
-      let chunks = [];
-      // We only want suggestions that have at least 2 words.
-      if (words.length < 2) return [];
+      body {
+        font-family: Arial, sans-serif;
+        transition: background-color 0.3s, color 0.3s;
+      }
+      a {
+        text-decoration: none;
+        color: inherit;
+      }
       
-      let i = 0;
-      while (i < words.length) {
-        // Default to take 3 words.
-        let chunkSize = 3;
-        // If remaining words are fewer than 3:
-        if (i + chunkSize > words.length) {
-          chunkSize = words.length - i;
-          // If the last chunk would be a single word, merge it with the previous chunk if possible.
-          if (chunkSize === 1 && chunks.length > 0) {
-            chunks[chunks.length - 1] += " " + words[i];
-            break;
+      /* --- Section Fade-In on Scroll --- */
+      section {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 1s ease-out, transform 1s ease-out;
+      }
+      section.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      
+      /* --- HEADER & NAVIGATION --- */
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #007bff;
+        color: #fff;
+        padding: 10px 20px;
+        position: relative;
+      }
+      .menu-toggle {
+        font-size: 24px;
+        background: none;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+      }
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        font-size: 1.5em;
+        font-weight: bold;
+      }
+      #themeChangeBtn {
+        width: 40px;
+        height: 40px;
+        border: none;
+        background: none;
+        cursor: pointer;
+      }
+      #themeChangeBtn img {
+        width: 100%;
+        height: 100%;
+        transition: transform 0.3s ease;
+      }
+      .rotate {
+        transform: rotate(360deg);
+      }
+      nav {
+        position: absolute;
+        top: 60px;
+        right: 20px;
+        background-color: #007bff;
+        border: 1px solid #0056b3;
+        border-radius: 5px;
+        display: none;
+        flex-direction: column;
+        z-index: 1000;
+      }
+      nav.active {
+        display: flex;
+      }
+      nav a {
+        padding: 10px 20px;
+        color: #fff;
+        border-bottom: 1px solid #0056b3;
+        cursor: pointer;
+      }
+      nav a:last-child {
+        border-bottom: none;
+      }
+      .speaker-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+      }
+      .speaker-btn img {
+        width: 24px;
+        height: 24px;
+      }
+      
+      /* --- MAIN CONTENT --- */
+      main {
+        padding: 20px;
+      }
+      
+      /* --- TOOL: Keyword Generator --- */
+      .container {
+        max-width: 500px;
+        margin: 20px auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        text-align: center;
+      }
+      /* Redesigned Input Area with a professional 3D look */
+      .container input {
+        width: 100%;
+        padding: 12px 20px;
+        font-size: 1em;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #e0e0e0, #ffffff);
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .container input:focus {
+        outline: none;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      }
+      #unsavedTagsContainer,
+      #savedTagsContainer {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 10px;
+      }
+      #savedTagsContainer {
+        margin-top: 20px;
+      }
+      .tag {
+        background: #fff000;
+        padding: 5px 10px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.95em;
+      }
+      .tag .tag-text {
+        margin-right: 5px;
+      }
+      .tag button {
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-size: 0.8em;
+        margin-left: 3px;
+        padding: 2px 4px;
+        border-radius: 4px;
+      }
+      .tag .save-btn {
+        background: #28a745;
+        color: #fff;
+      }
+      .tag .delete-btn {
+        background: #dc3545;
+        color: #fff;
+      }
+      .tag .remove-btn {
+        color: red;
+      }
+      #copyBtn {
+        margin-top: 10px;
+        background: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px;
+        width: 100%;
+        border-radius: 5px;
+        cursor: pointer;
+        display: none;
+      }
+      #wordCount {
+        margin-top: 10px;
+        font-weight: bold;
+      }
+      #adPlaceholder {
+        display: none;
+        margin-top: 15px;
+        padding: 10px;
+        border: 1px dashed #007bff;
+        border-radius: 5px;
+        background: #e0f0ff;
+        text-align: center;
+        font-size: 0.9em;
+      }
+      
+      /* --- PORTFOLIO SECTION --- */
+      #portfolio {
+        text-align: center;
+        margin: 40px 0;
+      }
+      #portfolio h2 {
+        margin-bottom: 20px;
+      }
+      .portfolio-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+      }
+      /* Only one card visible at a time */
+      .card {
+        width: 300px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: transform 0.3s, background-color 0.3s;
+        text-align: center;
+        padding: 10px;
+        background: #fff;
+        margin-bottom: 20px;
+      }
+      .card:hover {
+        transform: scale(1.05);
+      }
+      .card img {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 50%;
+        display: block;
+        margin: 0 auto 10px;
+      }
+      .card-content h3 {
+        margin: 10px 0;
+        font-size: 1.1em;
+        font-weight: bold;
+      }
+      .card-content ul {
+        text-align: left;
+        list-style-type: disc;
+        padding-left: 20px;
+        font-size: 0.9em;
+      }
+      .card-content p {
+        font-size: 0.9em;
+        margin: 0;
+      }
+      /* Navigation buttons for portfolio */
+      #showNextBtn, #showBackBtn {
+        margin-top: 10px;
+        background: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1em;
+      }
+      #showBackBtn {
+        display: none;
+      }
+      
+      /* --- FAQ SECTION --- */
+      #faq {
+        max-width: 800px;
+        margin: 40px auto;
+        text-align: left;
+      }
+      #faq h2 {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .faq-item {
+        border-bottom: 1px solid #ccc;
+        padding: 10px 0;
+      }
+      .faq-question {
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .faq-answer {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.5s ease;
+        padding-left: 10px;
+      }
+      .faq-item.active .faq-answer {
+        max-height: 500px;
+      }
+      .faq-toggle {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1em;
+      }
+      
+      /* --- PRIVACY POLICY POPUP --- */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.5);
+        padding-top: 50px;
+      }
+      .modal-content {
+        background-color: #fff;
+        margin: auto;
+        padding: 20px;
+        border-radius: 10px;
+        width: 80%;
+        max-width: 500px;
+        position: relative;
+      }
+      .modal-content .close {
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      
+      /* --- COMING SOON POPUP FOR FOOTER ICONS --- */
+      #comingSoonModal {
+        display: none;
+        position: fixed;
+        z-index: 2100;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.5);
+        padding-top: 50px;
+      }
+      #comingSoonModal .modal-content {
+        background-color: #fff;
+        margin: auto;
+        padding: 20px;
+        border-radius: 10px;
+        width: 80%;
+        max-width: 400px;
+        position: relative;
+        text-align: center;
+      }
+      #comingSoonModal .modal-content .close {
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      
+      /* --- FOOTER --- */
+      footer {
+        text-align: center;
+        padding: 20px;
+        background: #007bff;
+        color: #fff;
+      }
+      .footer-icons {
+        margin-top: 10px;
+      }
+      .footer-icons img {
+        width: 32px;
+        height: 32px;
+        margin: 0 5px;
+        vertical-align: middle;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- HEADER -->
+    <header>
+      <button class="menu-toggle" onclick="toggleMenu()">&#9776;</button>
+      <div class="header-right">
+        SEO Tags
+        <button id="themeChangeBtn" title="Change Theme" onclick="cycleTheme()">
+          <img src="https://img.icons8.com/fluency/48/000000/color-palette.png" alt="Theme" />
+        </button>
+      </div>
+      <nav id="nav-menu">
+        <a href="#" onclick="hideMenu()">Home</a>
+        <a href="contact.html" onclick="hideMenu()">Contact Us</a>
+        <a href="#" onclick="openPrivacyPopup()">Privacy Policy</a>
+        <button class="speaker-btn" onclick="playGuide()">
+          <img src="https://img.icons8.com/fluency/48/000000/speaker.png" alt="Speaker" />
+        </button>
+      </nav>
+    </header>
+    
+    <!-- MAIN CONTENT -->
+    <main>
+      <!-- TOOL: Keyword Generator -->
+      <section id="tool">
+        <div class="container">
+          <h2>YouTube SEO Tag Free</h2>
+          <input type="text" id="searchQuery" placeholder="Type your keyword" onkeyup="fetchSuggestions()" />
+          <div id="unsavedTagsContainer" class="tags"></div>
+          <hr />
+          <div id="savedTagsContainer" class="tags"></div>
+          <button id="copyBtn" onclick="copyTags()">Copy Keyword</button>
+          <div id="wordCount"></div>
+          <div id="adPlaceholder"></div>
+        </div>
+      </section>
+      
+      <!-- PORTFOLIO SECTION -->
+      <section id="portfolio">
+        <h2>Portfolio</h2>
+        <div class="portfolio-container">
+          <!-- Card 1: Mr. SEO Tags 👤 (Visible by default) -->
+          <div id="card1" class="card">
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg6ktvBUx069lqA-SFrcZS-agyn836iqfD3Wv0fhsPJv2mKV71KNxV-oyJQCi5qRttBlR4lp8dX-xhARQS0qhyX0a0DFHqGqyy3_3Jp2kVXw-1-0HVIaKKS7AVCFzmcynqcvtwsAY88ocdqg67ec5vqPr4n36WALi6LGo-c-q13VVHUX_0y9L_TtTnZVm0z/s1280/20250208_105022.png" alt="Mr. SEO Tags" />
+            <div class="card-content">
+              <h3>Mr. SEO Tags 👤</h3>
+              <ul>
+                <li>This tool is completely free✅</li>
+                <li>This app tool does not collect any personal information✅</li>
+                <li>YouTube SEO video ✅</li>
+                <li>tik Tok SEO free ✅</li>
+                <li>Instagram SEO❌</li>
+                <li>Ai feature ❌</li>
+              </ul>
+            </div>
+          </div>
+          <!-- Card 2: Use Tool (Hidden initially) -->
+          <div id="card2" class="card" style="display: none;">
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgHSms3LNRjLUV8HCMfctNXlHYLjISdvLzsS7p4dZw166I_SPd63nMXyTazDt2iWdcENrgiQgzJF9J3N2X4CWIrd2WDpVtrjgqR8bh4JGiXreAR1OS0e3Nhb8XIbWbj5H86vwQlvxL-VrWQsjaM2UO1LONCrB2He2FWuCm7Up3eyqAF_JNkrHMiqHLtJes1/s1280/20250208_105319.png" alt="Use Tool" />
+            <div class="card-content">
+              <h3>Use Tool</h3>
+              <ul>
+                <li>#SEOTags YouTube tag generator is designed to #quicklygenerate SEO effective tags for your #YouTube videos.✅</li>
+                <li>#YouTube #tag copy – A free tool that allows you to #easily generate SEO optimized YouTube tags.</li>
+                <li>TikTok #viral trending – Best hashtags for use with #tiktok: tiktok, #instagram, viral, #love, #explorepage, #trending, #fyp, like, #memes.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <!-- Portfolio Navigation Buttons -->
+        <button id="showNextBtn" onclick="showNextCard()">⏩ Show Next Card</button>
+        <button id="showBackBtn" onclick="showBackCard()" style="display: none;">⏪ Back</button>
+      </section>
+      
+      <!-- FAQ SECTION -->
+      <section id="faq">
+        <h2>Frequently Asked Questions</h2>
+        <!-- FAQ 1 -->
+        <div class="faq-item" onclick="toggleFAQ(this)">
+          <div class="faq-question">
+            1. How to use this tool?
+            <button class="faq-toggle">▼</button>
+          </div>
+          <div class="faq-answer">
+            <p>
+              To use the tool, you can put your keyword in the input, the keyword can be anything, then you will get the result below, its related keywords can also be copied and deleted if you don't like it. If you like and if you want, save it by pressing the button with the keyword you like and delete the rest and do a new search, save the ones you like and delete the ones you don't like.
+            </p>
+          </div>
+        </div>
+        <!-- FAQ 2 -->
+        <div class="faq-item" onclick="toggleFAQ(this)">
+          <div class="faq-question">
+            2. Can I copy saved keyword only or not?
+            <button class="faq-toggle">▼</button>
+          </div>
+          <div class="faq-answer">
+            <p>
+              Answers: Keywords that you click Save on are stored in local storage even if you close or refresh the page. If you want it not to be saved, then don't click Save. Whatever you want to copy, just copy them and they will be copied. If you have already saved some keywords, they will also be automatically copied. It is not the case that what you save will not be copied – it cannot happen. The keywords from the word search and the previously saved keywords will be copied together, so carefully copy the keywords and as soon as you copy them, your saved keywords will be automatically deleted from local storage.
+            </p>
+          </div>
+        </div>
+        <!-- FAQ 3 -->
+        <div class="faq-item" onclick="toggleFAQ(this)">
+          <div class="faq-question">
+            3. Where can we use their keyword?
+            <button class="faq-toggle">▼</button>
+          </div>
+          <div class="faq-answer">
+            <p>
+              These keywords can improve YouTube HCO because they show people's questions in real time that the user is repeatedly asking questions on YouTube, so it is better for YouTube 💯% and if you want to use it on TikTok, you can do it on TikTok as well.
+            </p>
+          </div>
+        </div>
+        <!-- FAQ 4 -->
+        <div class="faq-item" onclick="toggleFAQ(this)">
+          <div class="faq-question">
+            4. Will this tool have a paid service or not?
+            <button class="faq-toggle">▼</button>
+          </div>
+          <div class="faq-answer">
+            <p>
+              The paid service of this tool will come but the tool you are currently using will be completely free for a lifetime, you will not be charged a single rupee and in the next time you will be given a better tool which will be paid for you and it will have more features like AI feature, volume competition, title generation, all these things will be added to it and you will get it at a very low price.
+            </p>
+          </div>
+        </div>
+        <!-- FAQ 5 -->
+        <div class="faq-item" onclick="toggleFAQ(this)">
+          <div class="faq-question">
+            5. Can we earn money from this tool in future or can we earn now?
+            <button class="faq-toggle">▼</button>
+          </div>
+          <div class="faq-answer">
+            <p>
+              The answer is absolutely yes. You can still earn and when the money feature comes then you will be able to earn a lot because your entire flat will be filled. Remember that the commission you receive can be anywhere from about one dollar to three dollars – just as an example. You can earn money with this tool by putting your ad on TikTok or Google and stating in the ad that you can do YouTube SEO. Since the tool is toll-free and does not have premium features, it is normal. For instance, if you hire about 100 people, then you can make up to 400 dollars from 4 dollars per month. However, you must do your basics because this tool only provides keywords, not descriptions or titles. You can always search YouTube for more details.
+            </p>
+          </div>
+        </div>
+        <!-- FAQ 6 -->
+        <div class="faq-item" onclick="toggleFAQ(this)">
+          <div class="faq-question">
+            6. When will the support team respond if a problem occurs?
+            <button class="faq-toggle">▼</button>
+          </div>
+          <div class="faq-answer">
+            <p>
+              The support team typically responds within 24 to 48 hours.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+    
+    <!-- PRIVACY POLICY POPUP -->
+    <div id="privacyModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closePrivacyPopup()">&times;</span>
+        <h2>Privacy Policy</h2>
+        <p>
+          This Privacy Policy outlines how our SEO Tags tool collects, uses, and protects your data. We do not share your personal information with third parties without your consent. All keyword data is stored locally on your device, and saved keywords are only cleared when you explicitly copy them. For further information, please contact our support.
+        </p>
+      </div>
+    </div>
+    
+    <!-- COMING SOON POPUP FOR FOOTER ICONS -->
+    <div id="comingSoonModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeComingSoonPopup()">&times;</span>
+        <h2>Coming Soon</h2>
+        <p>Coming Soon</p>
+        <button onclick="closeComingSoonPopup()">Close</button>
+      </div>
+    </div>
+    
+    <!-- FOOTER -->
+    <footer>
+      <p>&copy; 2025 SEO Tags. All rights reserved.</p>
+      <div class="footer-icons">
+        <img src="https://img.icons8.com/fluency/48/000000/youtube-play.png" alt="YouTube" title="YouTube" onclick="showComingSoonPopup()" />
+        <img src="https://img.icons8.com/fluency/48/000000/tiktok--v1.png" alt="TikTok" title="TikTok" onclick="showComingSoonPopup()" />
+        <img src="https://img.icons8.com/fluency/48/000000/instagram-new.png" alt="Instagram" title="Instagram" onclick="showComingSoonPopup()" />
+      </div>
+    </footer>
+    
+    <!-- --- SCRIPTS --- -->
+    <script>
+      /***** NAVIGATION FUNCTIONS *****/
+      function toggleMenu() {
+        document.getElementById("nav-menu").classList.toggle("active");
+      }
+      function hideMenu() {
+        document.getElementById("nav-menu").classList.remove("active");
+      }
+      
+      /***** PRIVACY POLICY POPUP FUNCTIONS *****/
+      function openPrivacyPopup() {
+        document.getElementById("privacyModal").style.display = "block";
+        hideMenu();
+      }
+      function closePrivacyPopup() {
+        document.getElementById("privacyModal").style.display = "none";
+      }
+      window.onclick = function (event) {
+        const modal = document.getElementById("privacyModal");
+        if (event.target == modal) {
+          modal.style.display = "none";
+        }
+        const comingSoonModal = document.getElementById("comingSoonModal");
+        if (event.target == comingSoonModal) {
+          comingSoonModal.style.display = "none";
+        }
+      };
+      
+      /***** COMING SOON POPUP FUNCTIONS *****/
+      function showComingSoonPopup() {
+        document.getElementById("comingSoonModal").style.display = "block";
+        const utterance = new SpeechSynthesisUtterance("जल्द आ रहा है");
+        utterance.lang = "hi-IN";
+        speechSynthesis.cancel();
+        speechSynthesis.speak(utterance);
+      }
+      function closeComingSoonPopup() {
+        document.getElementById("comingSoonModal").style.display = "none";
+      }
+      
+      /***** SPEAKER BUTTON (Text-to-Speech Guide) *****/
+      function playGuide() {
+        const guideText =
+          "इस उपकरण का उपयोग करने के लिए, पहले अपने कीवर्ड इनपुट करें। सुझाए गए टैग को सेव करें या कॉपी करें। इससे आपकी वीडियो की खोज क्षमता में सुधार होता है और आप आसानी से कमाई कर सकते हैं। अधिक जानकारी के लिए, ध्यान से सभी निर्देश पढ़ें।";
+        const utterance = new SpeechSynthesisUtterance(guideText);
+        utterance.lang = "hi-IN";
+        speechSynthesis.cancel();
+        speechSynthesis.speak(utterance);
+      }
+      
+      /***** THEME CHANGE BUTTON *****/
+      const themes = [
+        { bg: "#007bff", text: "#fff", navBg: "#0056b3", cardText: "#fff" },  // Blue
+        { bg: "#fff", text: "#333", navBg: "#007bff", cardText: "#333" },       // White
+        { bg: "#e0ffe0", text: "#333", navBg: "#28a745", cardText: "#333" },      // Green
+        { bg: "#fffbcc", text: "#333", navBg: "#ffc107", cardText: "#333" },      // Yellow
+        { bg: "#fff3e0", text: "#333", navBg: "#fd7e14", cardText: "#333" },      // Orange
+        { bg: "#ffe0e0", text: "#333", navBg: "#dc3545", cardText: "#333" }       // Red
+      ];
+      let currentTheme = 0;
+      function setTheme(index) {
+        currentTheme = index;
+        const theme = themes[currentTheme];
+        document.body.style.backgroundColor = theme.bg;
+        document.body.style.color = theme.text;
+        document.querySelector("header").style.backgroundColor = theme.navBg;
+        document.querySelector("footer").style.backgroundColor = theme.navBg;
+        document.querySelectorAll(".card-content").forEach(cc => {
+          cc.style.color = theme.cardText;
+        });
+      }
+      function cycleTheme() {
+        currentTheme = (currentTheme + 1) % themes.length;
+        setTheme(currentTheme);
+        localStorage.setItem("themeIndex", currentTheme);
+        const btnImg = document.getElementById("themeChangeBtn").querySelector("img");
+        btnImg.classList.add("rotate");
+        setTimeout(() => { btnImg.classList.remove("rotate"); }, 300);
+      }
+      window.onload = function() {
+        const storedThemeIndex = localStorage.getItem("themeIndex");
+        if (storedThemeIndex !== null) {
+          setTheme(parseInt(storedThemeIndex));
+        } else {
+          setTheme(currentTheme);
+        }
+      }
+      
+      /***** FAQ TOGGLE *****/
+      function toggleFAQ(item) {
+        item.classList.toggle("active");
+      }
+      
+      /***** KEYWORD GENERATOR FUNCTIONS *****/
+      let generatedTags = [];
+      function fetchSuggestions() {
+        const query = document.getElementById("searchQuery").value.trim();
+        const unsavedContainer = document.getElementById("unsavedTagsContainer");
+        const copyBtn = document.getElementById("copyBtn");
+        const wordCountDiv = document.getElementById("wordCount");
+        if (!query) {
+          unsavedContainer.innerHTML = "";
+          copyBtn.style.display = "none";
+          wordCountDiv.textContent = "";
+          return;
+        }
+        const oldScript = document.getElementById("jsonpScript");
+        if (oldScript) oldScript.remove();
+        const script = document.createElement("script");
+        script.id = "jsonpScript";
+        script.src =
+          "https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=" +
+          encodeURIComponent(query) +
+          "&callback=handleSuggestions";
+        document.body.appendChild(script);
+      }
+      function handleSuggestions(data) {
+        const suggestions = data[1] || [];
+        let processedTags = [];
+        suggestions.forEach(suggestion => {
+          processedTags = processedTags.concat(processSuggestion(suggestion));
+        });
+        generatedTags = processedTags;
+        displayTags(generatedTags);
+      }
+      function processSuggestion(suggestion) {
+        const words = suggestion.split(/\s+/).filter(w => w.length > 0);
+        let chunks = [];
+        if (words.length < 2) return [];
+        let i = 0;
+        while (i < words.length) {
+          let chunkSize = 3;
+          if (i + chunkSize > words.length) {
+            chunkSize = words.length - i;
+            if (chunkSize === 1 && chunks.length > 0) {
+              chunks[chunks.length - 1] += " " + words[i];
+              break;
+            }
           }
+          if (chunkSize === 1 && i === 0) chunkSize = 2;
+          const chunk = words.slice(i, i + chunkSize).join(" ");
+          if (chunk.split(/\s+/).length >= 2) {
+            chunks.push(chunk);
+          }
+          i += chunkSize;
         }
-        // Ensure each chunk has at least 2 words.
-        if (chunkSize === 1 && i === 0) {
-          // If the suggestion starts with a single word, force two.
-          chunkSize = 2;
-        }
-        const chunk = words.slice(i, i + chunkSize).join(" ");
-        // Only add chunks that have at least 2 words.
-        if (chunk.split(/\s+/).length >= 2) {
-          chunks.push(chunk);
-        }
-        i += chunkSize;
+        return chunks;
       }
-      return chunks;
-    }
-
-    // --- STEP 3: Display the processed tags ---
-    function displayTags(tags) {
-      const tagsContainer = document.getElementById("tagsContainer");
-      const copyBtn = document.getElementById("copyBtn");
-      tagsContainer.innerHTML = "";
-
-      if (tags.length === 0) {
-        tagsContainer.innerHTML = "<p>No suggestions found.</p>";
-        copyBtn.style.display = "none";
-        document.getElementById("wordCount").textContent = "";
-        return;
-      }
-
-      // Limit to 30 tags.
-      tags.slice(0, 30).forEach(tag => {
-        const tagElement = document.createElement("div");
-        tagElement.classList.add("tag");
-
-        // Create a text node for the tag text.
-        const textNode = document.createTextNode(tag);
-        // Create a span for the removal button using the proper Unicode multiplication sign.
-        const removeSpan = document.createElement("span");
-        removeSpan.textContent = "\u00D7"; // displays as ×
-        removeSpan.onclick = function() {
-          removeTag(removeSpan);
-          updateWordCount();  // Update word count when a tag is removed.
-        };
-
-        tagElement.appendChild(textNode);
-        tagElement.appendChild(removeSpan);
-        tagsContainer.appendChild(tagElement);
-      });
-
-      copyBtn.style.display = "block";
-      updateWordCount();
-    }
-
-    // --- STEP 4: Remove a tag from the UI ---
-    function removeTag(element) {
-      element.parentElement.remove();
-    }
-
-    // --- STEP 5: Copy only the tag texts as a comma-separated list ---
-    function copyTags() {
-      const tagElements = document.querySelectorAll(".tag");
-      const tagsArray = Array.from(tagElements).map(tag => {
-        // The firstChild is the text node with the tag text.
-        return tag.firstChild.nodeValue.trim();
-      });
-
-      if (tagsArray.length === 0) {
-        alert("No tags to copy!");
-        return;
-      }
-
-      navigator.clipboard.writeText(tagsArray.join(", "))
-        .then(() => {
-          alert("Tags copied successfully!");
-        })
-        .catch(err => console.error("Error copying:", err));
-    }
-
-    // --- STEP 6: Update the word count display accurately ---
-    function updateWordCount() {
-      const tagElements = document.querySelectorAll(".tag");
-      let totalWords = 0;
-      Array.from(tagElements).forEach(tag => {
-        // Use the first child (the text node) to count words.
-        const text = tag.firstChild.nodeValue.trim();
-        if (text.length > 0) {
-          // Split on whitespace.
-          const words = text.split(/\s+/);
-          totalWords += words.length;
+      function displayTags(tags) {
+        const unsavedContainer = document.getElementById("unsavedTagsContainer");
+        const savedContainer = document.getElementById("savedTagsContainer");
+        let savedKeywords = JSON.parse(localStorage.getItem("savedKeywords")) || [];
+        let unsavedKeywords = tags.filter(tag => !savedKeywords.includes(tag));
+        unsavedContainer.innerHTML = "";
+        savedContainer.innerHTML = "";
+        unsavedKeywords.forEach(keyword => {
+          const tagElement = document.createElement("div");
+          tagElement.classList.add("tag");
+          const textSpan = document.createElement("span");
+          textSpan.classList.add("tag-text");
+          textSpan.textContent = keyword;
+          tagElement.appendChild(textSpan);
+          const saveBtn = document.createElement("button");
+          saveBtn.classList.add("save-btn");
+          saveBtn.textContent = "Save";
+          saveBtn.onclick = function () { saveKeyword(keyword); };
+          tagElement.appendChild(saveBtn);
+          const removeBtn = document.createElement("button");
+          removeBtn.classList.add("remove-btn");
+          removeBtn.textContent = "×";
+          removeBtn.onclick = function () { removeGeneratedKeyword(keyword); };
+          tagElement.appendChild(removeBtn);
+          unsavedContainer.appendChild(tagElement);
+        });
+        savedKeywords.forEach(keyword => {
+          const tagElement = document.createElement("div");
+          tagElement.classList.add("tag");
+          const textSpan = document.createElement("span");
+          textSpan.classList.add("tag-text");
+          textSpan.textContent = keyword;
+          tagElement.appendChild(textSpan);
+          const deleteBtn = document.createElement("button");
+          deleteBtn.classList.add("delete-btn");
+          deleteBtn.textContent = "Delete";
+          deleteBtn.onclick = function () { deleteKeyword(keyword); };
+          tagElement.appendChild(deleteBtn);
+          savedContainer.appendChild(tagElement);
+        });
+        if ((unsavedContainer.children.length + savedContainer.children.length) > 0) {
+          document.getElementById("copyBtn").style.display = "block";
+        } else {
+          document.getElementById("copyBtn").style.display = "none";
         }
+        updateWordCount();
+      }
+      function saveKeyword(keyword) {
+        let savedKeywords = JSON.parse(localStorage.getItem("savedKeywords")) || [];
+        if (!savedKeywords.includes(keyword)) {
+          savedKeywords.push(keyword);
+          localStorage.setItem("savedKeywords", JSON.stringify(savedKeywords));
+        }
+        displayTags(generatedTags);
+      }
+      function deleteKeyword(keyword) {
+        let savedKeywords = JSON.parse(localStorage.getItem("savedKeywords")) || [];
+        savedKeywords = savedKeywords.filter(k => k !== keyword);
+        localStorage.setItem("savedKeywords", JSON.stringify(savedKeywords));
+        displayTags(generatedTags);
+      }
+      function removeGeneratedKeyword(keyword) {
+        generatedTags = generatedTags.filter(k => k !== keyword);
+        displayTags(generatedTags);
+      }
+      function copyTags() {
+        const unsavedTags = Array.from(document.querySelectorAll("#unsavedTagsContainer .tag .tag-text"))
+          .map(span => span.textContent.trim());
+        const savedTags = Array.from(document.querySelectorAll("#savedTagsContainer .tag .tag-text"))
+          .map(span => span.textContent.trim());
+        const combinedTags = unsavedTags.concat(savedTags);
+        if (combinedTags.length === 0) {
+          alert("No tags to copy!");
+          return;
+        }
+        navigator.clipboard.writeText(combinedTags.join(", "))
+          .then(() => {
+            alert("Tags copied successfully!");
+            let savedKeywords = JSON.parse(localStorage.getItem("savedKeywords")) || [];
+            if (savedKeywords.length > 0) {
+              localStorage.setItem("savedKeywords", JSON.stringify([]));
+              displayTags(generatedTags);
+            }
+            if (!sessionStorage.getItem("adShown")) {
+              sessionStorage.setItem("adShown", "true");
+              const adPlaceholder = document.getElementById("adPlaceholder");
+              adPlaceholder.style.display = "block";
+              adPlaceholder.innerHTML = '<a href="contact.html">Visit our sponsor for special offers!</a>';
+            }
+          })
+          .catch(err => console.error("Error copying:", err));
+      }
+      function updateWordCount() {
+        let unsavedCount = Array.from(document.querySelectorAll("#unsavedTagsContainer .tag .tag-text"))
+          .reduce((acc, span) => acc + span.textContent.trim().split(/\s+/).length, 0);
+        let savedCount = Array.from(document.querySelectorAll("#savedTagsContainer .tag .tag-text"))
+          .reduce((acc, span) => acc + span.textContent.trim().split(/\s+/).length, 0);
+        document.getElementById("wordCount").textContent = "Word Count: " + (unsavedCount + savedCount);
+      }
+      
+      /***** PORTFOLIO CARD NAVIGATION *****/
+      function showNextCard() {
+        document.getElementById("card1").style.display = "none";
+        document.getElementById("card2").style.display = "block";
+        document.getElementById("showNextBtn").style.display = "none";
+        document.getElementById("showBackBtn").style.display = "block";
+      }
+      function showBackCard() {
+        document.getElementById("card2").style.display = "none";
+        document.getElementById("card1").style.display = "block";
+        document.getElementById("showBackBtn").style.display = "none";
+        document.getElementById("showNextBtn").style.display = "block";
+      }
+      
+      /***** SCROLL ANIMATION (Fade-In Sections) *****/
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+          }
+        });
+      }, { threshold: 0.2 });
+      document.querySelectorAll("section").forEach(section => {
+        observer.observe(section);
       });
-      document.getElementById("wordCount").textContent = "Word Count: " + totalWords;
-    }
-  </script>
-</body>
+    </script>
+  </body>
 </html>
