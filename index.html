@@ -389,19 +389,41 @@
         background: #007bff;
         color: #fff;
       }
-      .footer-icons {
-        margin-top: 10px;
+      
+      /* --- LOADING SPINNER --- */
+      #loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255,255,255,0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 3000;
+        display: none; /* Hidden by default */
       }
-      .footer-icons img {
-        width: 32px;
-        height: 32px;
-        margin: 0 5px;
-        vertical-align: middle;
-        cursor: pointer;
+      .spinner {
+        border: 8px solid #f3f3f3;
+        border-top: 8px solid #007bff;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 2s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
       }
     </style>
   </head>
   <body>
+    <!-- LOADING SPINNER (Global) -->
+    <div id="loading">
+      <div class="spinner"></div>
+    </div>
+    
     <!-- HEADER -->
     <header>
       <button class="menu-toggle" onclick="toggleMenu()">&#9776;</button>
@@ -413,7 +435,6 @@
       </div>
       <nav id="nav-menu">
         <a href="#" onclick="hideMenu()">Home</a>
-        
         <a href="#" onclick="openPrivacyPopup()">Privacy Policy</a>
         <button class="speaker-btn" onclick="playGuide()">
           <img src="https://img.icons8.com/fluency/48/000000/speaker.png" alt="Speaker" />
@@ -557,29 +578,25 @@
       <div class="modal-content">
         <span class="close" onclick="closePrivacyPopup()">&times;</span>
         <h2>Privacy Policy</h2>
-        <p> 
-
-Privacy Policy
-Last Updated: [February/12/2025]
-
-Our app [SEO YT Tagsg ] does not collect or store any personal user data. This app is built using YouTube API V3 to help users generate search tags for their videos. The app is completely free and does not require any subscription or payment.
-1. Data Collection and User Privacy
-We do not collect or store the following user data:
-✔ Name, email, phone number, address, or any personal details
-✔ Search history or input queries are not saved
-✔ No login or signup is required to use this app
-2. Third-Party Services
-This app uses YouTube API V3 to generate search tags based on user input. However, we are not affiliated with YouTube or Google. We do not store, track, or share any user information.
-
-3. Advertisements (Google AdMob)
-✔ Our app may display Google AdMob ads.
-✔ These ads follow Google's Privacy Policy.
-✔ We do not store or track any personalized ads for users.
-4. App Usage and Restrictions
-✔ Users can access the app anytime without registration.
-✔ The app does not allow users to upload or edit content on YouTube or TikTok; it only generates tags.
-✔ The app will always remain free, with no premium subscriptions or payments required.
-
+        <p>
+          Privacy Policy<br>
+          Last Updated: [February/12/2025]<br><br>
+          Our app [SEO YT Tags] does not collect or store any personal user data. This app is built using YouTube API V3 to help users generate search tags for their videos. The app is completely free and does not require any subscription or payment.<br><br>
+          1. Data Collection and User Privacy<br>
+          - We do not collect or store the following user data:<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;✔ Name, email, phone number, address, or any personal details<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;✔ Search history or input queries are not saved<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;✔ No login or signup is required to use this app<br><br>
+          2. Third-Party Services<br>
+          - This app uses YouTube API V3 to generate search tags based on user input. However, we are not affiliated with YouTube or Google. We do not store, track, or share any user information.<br><br>
+          3. Advertisements (Google AdMob)<br>
+          - Our app may display Google AdMob ads.<br>
+          - These ads follow Google's Privacy Policy.<br>
+          - We do not store or track any personalized ads for users.<br><br>
+          4. App Usage and Restrictions<br>
+          - Users can access the app anytime without registration.<br>
+          - The app does not allow users to upload or edit content on YouTube or TikTok; it only generates tags.<br>
+          - The app will always remain free, with no premium subscriptions or payments required.
         </p>
       </div>
     </div>
@@ -597,11 +614,6 @@ This app uses YouTube API V3 to generate search tags based on user input. Howeve
     <!-- FOOTER -->
     <footer>
       <p>&copy; 2025 SEO Tags. All rights reserved.</p>
-      <div class="footer-icons">
-        <img src="https://img.icons8.com/fluency/48/000000/youtube-play.png" alt="YouTube" title="YouTube" onclick="showComingSoonPopup()" />
-        <img src="https://img.icons8.com/fluency/48/000000/tiktok--v1.png" alt="TikTok" title="TikTok" onclick="showComingSoonPopup()" />
-        <img src="https://img.icons8.com/fluency/48/000000/instagram-new.png" alt="Instagram" title="Instagram" onclick="showComingSoonPopup()" />
-      </div>
     </footer>
     
     <!-- --- SCRIPTS --- -->
@@ -693,6 +705,16 @@ This app uses YouTube API V3 to generate search tags based on user input. Howeve
         }
       }
       
+      /***** LOADING SPINNER FUNCTIONS *****/
+      // Show spinner on page load for 2 seconds
+      window.addEventListener('load', function() {
+        var loading = document.getElementById('loading');
+        loading.style.display = 'flex';
+        setTimeout(function() {
+          loading.style.display = 'none';
+        }, 2000);
+      });
+      
       /***** FAQ TOGGLE *****/
       function toggleFAQ(item) {
         item.classList.toggle("active");
@@ -700,26 +722,37 @@ This app uses YouTube API V3 to generate search tags based on user input. Howeve
       
       /***** KEYWORD GENERATOR FUNCTIONS *****/
       let generatedTags = [];
+      let debounceTimer;  // Debounce timer variable
       function fetchSuggestions() {
-        const query = document.getElementById("searchQuery").value.trim();
-        const unsavedContainer = document.getElementById("unsavedTagsContainer");
-        const copyBtn = document.getElementById("copyBtn");
-        const wordCountDiv = document.getElementById("wordCount");
-        if (!query) {
-          unsavedContainer.innerHTML = "";
-          copyBtn.style.display = "none";
-          wordCountDiv.textContent = "";
-          return;
-        }
-        const oldScript = document.getElementById("jsonpScript");
-        if (oldScript) oldScript.remove();
-        const script = document.createElement("script");
-        script.id = "jsonpScript";
-        script.src =
-          "https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=" +
-          encodeURIComponent(query) +
-          "&callback=handleSuggestions";
-        document.body.appendChild(script);
+        // Clear any existing timer so that function is called only when user stops typing
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          const query = document.getElementById("searchQuery").value.trim();
+          const unsavedContainer = document.getElementById("unsavedTagsContainer");
+          const copyBtn = document.getElementById("copyBtn");
+          const wordCountDiv = document.getElementById("wordCount");
+          if (!query) {
+            unsavedContainer.innerHTML = "";
+            copyBtn.style.display = "none";
+            wordCountDiv.textContent = "";
+            return;
+          }
+          var loading = document.getElementById('loading');
+          loading.style.display = 'flex';
+          // Show loading spinner for 1 second before fetching suggestions
+          setTimeout(function() {
+            loading.style.display = 'none';
+            const oldScript = document.getElementById("jsonpScript");
+            if (oldScript) oldScript.remove();
+            const script = document.createElement("script");
+            script.id = "jsonpScript";
+            script.src =
+              "https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=" +
+              encodeURIComponent(query) +
+              "&callback=handleSuggestions";
+            document.body.appendChild(script);
+          }, 1000);
+        }, 1000);  // Debounce delay of 1 second after typing stops
       }
       function handleSuggestions(data) {
         const suggestions = data[1] || [];
